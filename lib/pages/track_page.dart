@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -11,6 +12,7 @@ import 'package:trucker/components/my_drawer.dart';
 import 'package:trucker/models/users.dart' as user;
 import 'package:trucker/models/users.dart';
 import 'package:trucker/services/location/location_service.dart';
+import 'package:trucker/services/presence/presence_service.dart';
 
 class Tracks extends StatefulWidget {
   const Tracks({super.key});
@@ -121,9 +123,9 @@ class _TracksState extends State<Tracks> {
                               children: [
                                 if (users.isEmpty)
                                   Container(
-                                      margin: EdgeInsets.only(top: 20),
+                                      margin: const EdgeInsets.only(top: 20),
                                       alignment: Alignment.bottomCenter,
-                                      child: Text(
+                                      child: const Text(
                                         'No Found Garbage Truck',
                                         style: TextStyle(fontSize: 20),
                                       )),
@@ -181,6 +183,31 @@ class _TracksState extends State<Tracks> {
               );
             },
           );
+  }
+
+  final presenceService = PresenceService();
+  final userId = FirebaseAuth.instance.currentUser;
+
+  void onUserLogin() async {
+    presenceService.setUserOnlineStatus();
+    checkUserStatus();
+  }
+
+  void checkUserStatus() {
+    DatabaseReference userStatusRef =
+        FirebaseDatabase.instance.ref("users/${userId!.uid}");
+
+    userStatusRef.onValue.listen((event) {
+      final status = event.snapshot.value;
+      print("User is currently: $status");
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    onUserLogin();
   }
 
   @override
@@ -270,50 +297,66 @@ class _MyDraggableSheetState extends State<MyDraggableSheet> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Estimated Hour Of Collection'),
-              const Text(
-                '6:30 am - 7:00 am',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildCircle('M'),
-                  _buildCircle('W'),
-                  _buildCircle('F'),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Previous Route',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    widget.user[0].truckname ?? '',
-                  ),
-                  const Text(
-                    'Current Route',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    widget.user[0].truckname ?? '',
-                  ),
-                  const Text(
-                    'Next Route',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    widget.user[0].truckname ?? '',
-                  ),
-                ],
-              ),
-            ],
-          ),
+          content: widget.user.isEmpty
+              ? const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'No Garbage Truck Found.',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Icon(Icons.garage)
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Estimated Hour Of Collection'),
+                    const Text(
+                      '6:30 am - 7:00 am',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildCircle('M'),
+                        _buildCircle('W'),
+                        _buildCircle('F'),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Previous Route',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          widget.user[0].truckname ?? '',
+                        ),
+                        const Text(
+                          'Current Route',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          widget.user[0].truckname ?? '',
+                        ),
+                        const Text(
+                          'Next Route',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          widget.user[0].truckname ?? '',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
           actions: [
             TextButton(
               onPressed: () {
@@ -454,53 +497,6 @@ class _MyDraggableSheetState extends State<MyDraggableSheet> {
                   )),
             ]))),
           ])),
-    );
-  }
-
-  SliverToBoxAdapter buttonTruckHome() {
-    return SliverToBoxAdapter(
-      child: Container(
-        height: 25,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(120, 20),
-                padding: EdgeInsets.zero,
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Colors.green, width: 1),
-                ),
-              ),
-              child: const Icon(
-                Icons.local_shipping,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(120, 20),
-                padding: EdgeInsets.zero,
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Colors.green, width: 1),
-                ),
-              ),
-              child: const Icon(
-                Icons.home,
-                color: Colors.black,
-                size: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

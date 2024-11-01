@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -48,13 +49,6 @@ class LocationServiceProvider with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     role = prefs.getString('role') ?? '';
-  }
-
-  // Update the driver's location and polyline coordinates
-  void updateDriverLocation(LatLng newLocation) {
-    _userLocation = newLocation;
-
-    notifyListeners();
   }
 
   Future<void> _initializeLocation() async {

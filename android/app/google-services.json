@@ -1,8 +1,9 @@
 {
   "project_info": {
     "project_number": "830436207960",
+    "firebase_url": "https://trucker-0-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "trucker-0",
-    "storage_bucket": "trucker-0.appspot.com"
+    "storage_bucket": "trucker-0.firebasestorage.app"
   },
   "client": [
     {
